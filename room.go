@@ -36,6 +36,34 @@ func (h *Hub) CreateRoom(config *RoomConfig) string {
 	return roomID
 }
 
+// CreateRoomWithID creates a new room with a specific ID
+func (h *Hub) CreateRoomWithID(roomID string, config *RoomConfig) error {
+	h.roomsMu.Lock()
+	defer h.roomsMu.Unlock()
+
+	// Check if room already exists
+	if _, exists := h.rooms[roomID]; exists {
+		return errors.New("room already exists")
+	}
+
+	room := &Room{
+		ID:         roomID,
+		Name:       config.Name,
+		Clients:    make(map[string]*Client),
+		MaxClients: config.MaxClients,
+		IsPrivate:  config.IsPrivate,
+		Password:   config.Password,
+		CreatedAt:  time.Now(),
+		Metadata:   config.Metadata,
+	}
+
+	h.rooms[roomID] = room
+
+	log.Printf("Room created with custom ID: %s (%s)", roomID, config.Name)
+
+	return nil
+}
+
 // JoinRoom adds a client to a room
 func (h *Hub) JoinRoom(userID, roomID string) error {
 	h.roomsMu.Lock()
