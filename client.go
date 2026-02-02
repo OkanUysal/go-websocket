@@ -106,6 +106,13 @@ func (c *Client) WritePump() {
 
 // SendMessage sends a message to this client
 func (c *Client) SendMessage(msg Message) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Channel already closed, client disconnected
+			log.Printf("Failed to send message to client %s: %v", c.UserID, r)
+		}
+	}()
+	
 	select {
 	case c.Send <- msg:
 	default:
